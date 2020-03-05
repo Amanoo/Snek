@@ -3,17 +3,21 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:skia1="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              mc:Ignorable="d"
              x:Class="Snek.MainPage">
 
-    <Grid x:Name="gameGrid" ColumnSpacing="0" RowSpacing="0">
-        <Grid.GestureRecognizers>
+    <StackLayout x:Name="gameLayout" >
+        <StackLayout.GestureRecognizers>
             <SwipeGestureRecognizer Direction="Left" Swiped="OnSwiped"/>
             <SwipeGestureRecognizer Direction="Right" Swiped="OnSwiped"/>
             <SwipeGestureRecognizer Direction="Up" Swiped="OnSwiped"/>
             <SwipeGestureRecognizer Direction="Down" Swiped="OnSwiped"/>
-        </Grid.GestureRecognizers>
+        </StackLayout.GestureRecognizers>
         <Label x:Name="labeltje" Text="hu"></Label>
-    </Grid>
+        <skia1:SKCanvasView x:Name="playfieldCanvas"
+                           PaintSurface="playfieldCanvas_PaintSurface"
+                            HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" />
+    </StackLayout>
 
 </ContentPage>
