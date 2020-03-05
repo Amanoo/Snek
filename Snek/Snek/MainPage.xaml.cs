@@ -23,7 +23,7 @@ namespace Snek
         {
             InitializeComponent();
             gameData = new GameData ( 20, 20 );
-            scoreLabel.Text = "Score: 0\n\nSwipe to start\n";
+            scoreLabel.Text = "Score: 0\n\nSwipe to start\n\n";
             running = false;
             //directionCanvas.HeightRequest = gameLayout.Height / 8;
             Device.StartTimer(TimeSpan.FromSeconds(0.4), () =>
