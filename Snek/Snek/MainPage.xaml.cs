@@ -1,14 +1,10 @@
 ﻿using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Xamarin.Forms;
 
 namespace Snek
@@ -27,15 +23,13 @@ namespace Snek
         {
             InitializeComponent();
             gameData = new GameData ( 20, 20 );
-            scoreLabel.Text = "Score: 0\n\nSwipe to start";
+            scoreLabel.Text = "Score: 0\n\nSwipe to start\n";
             running = false;
             //directionCanvas.HeightRequest = gameLayout.Height / 8;
             Device.StartTimer(TimeSpan.FromSeconds(0.4), () =>
             {
-                Task.Run(async () =>
-                {
+                
                     if(running)tick();
-                });
                 return true;
             });
         }
@@ -50,7 +44,7 @@ namespace Snek
             }
             else
             {
-                scoreLabel.Text = "Score: " + gameData.score;
+                scoreLabel.Text = "Score: " + gameData.score+"\n\n\n\n";
             }
             playfieldCanvas.InvalidateSurface();
         }
@@ -61,7 +55,7 @@ namespace Snek
             }
             else
             {
-                scoreLabel.Text = "Score: 0";
+                scoreLabel.Text = "Score: 0\n\n\n\n";
                 gameData = new GameData(20, 20);
                 running = true;
             }
