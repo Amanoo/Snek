@@ -10,6 +10,8 @@ public class GameData
 
     public IntPoint playingField;
     public IntPoint foodLocation;
+    public int score = 0;
+    bool isAlive=true;
 
     public struct IntPoint
     {
@@ -33,6 +35,16 @@ public class GameData
     Direction direction;
     Direction newDirection;
     public LinkedList<SnakeChunk> snake;
+
+    public string getNewDirection()
+    {
+        string dir = "";
+        if (newDirection == Direction.Right) dir= "right";
+        if (newDirection == Direction.Left) dir= "left";
+        if (newDirection == Direction.Up) dir= "up";
+        if (newDirection == Direction.Down) dir= "down";
+        return dir;
+    }
 
     public GameData(int x, int y)
 	{
@@ -60,7 +72,6 @@ public class GameData
     public void gameTick()
     {
         SnakeChunk currHead = snake.First.Value;
-        int headSprite = 0;
         SnakeChunk newHead = new SnakeChunk {};
         newHead.x = currHead.x;
         newHead.y = currHead.y;
@@ -79,24 +90,33 @@ public class GameData
                 newHead.x = (newHead.x + 1) % playingField.X;
                 break;
         }
+
         newHead.sprite = getNewHeadSprite(newHead.x, newHead.y);
         currHead.sprite=replaceOldHeadSprite(currHead.sprite);
         snake.First.Value = currHead;
         snake.AddFirst(newHead);
         direction = newDirection;
-        snake.RemoveLast();
+
+        if (foodLocation.X == newHead.x && foodLocation.Y == newHead.y)
+        {
+            score++;
+            spawnFood();
+        }
+        else
+        {
+
+            snake.RemoveLast();
+            double[] lastcoords = { snake.Last.Value.x, snake.Last.Value.y };
+            double[] penultimate = { snake.Last.Previous.Value.x, snake.Last.Previous.Value.y };
+            SnakeChunk newTail = snake.Last.Value;
+            if ((lastcoords[0] + 1) % playingField.X == penultimate[0]) { newTail.sprite = 104; }    //tail is moving right
+            else if ((penultimate[0] + 1) % playingField.X == lastcoords[0]) { newTail.sprite = 106; } //tail is moving left
+            else if ((lastcoords[1] + 1) % playingField.X == penultimate[1]) { newTail.sprite = 105; } //tail is moving down
+            else if ((penultimate[1] + 1) % playingField.X == lastcoords[1]) { newTail.sprite = 107; } //tail is moving up
+            snake.Last.Value = newTail;
+        }
 
 
-        double[] lastcoords = { snake.Last.Value.x, snake.Last.Value.y };
-        double[] penultimate = { snake.Last.Previous.Value.x, snake.Last.Previous.Value.y };
-        SnakeChunk newTail = snake.Last.Value;
-        if ((lastcoords[0] + 1) % playingField.X == penultimate[0]) { newTail.sprite = 104; }    //tail is moving right
-        else if ((penultimate[0] + 1) % playingField.X == lastcoords[0]) { newTail.sprite = 106; } //tail is moving left
-        else if ((lastcoords[1] + 1) % playingField.X == penultimate[1]) { newTail.sprite = 105; } //tail is moving down
-        else if ((penultimate[1] + 1) % playingField.X == lastcoords[1]) { newTail.sprite = 107; } //tail is moving up
-        snake.Last.Value = newTail;
-
-        if (foodLocation.X == newHead.x && foodLocation.Y == newHead.y) spawnFood();
     }
 
     private int replaceOldHeadSprite(int oldsprite)
@@ -184,26 +204,53 @@ public class GameData
         {
             case Direction.Right:
                 sprite = 100;
-                if (foodLocation.X == x && foodLocation.Y == y) { sprite = 200; }
-                else if (foodLocation.X == (x + 1) % playingField.X && foodLocation.Y == y) { sprite = 204; }
+                if (objectAt( x , y)) { sprite = 200; }
+                else if (objectAt((x + 1) % playingField.X, y)) { sprite = 204; }
                 break;
             case Direction.Down:
                 sprite = 101;
-                if (foodLocation.X == x && foodLocation.Y == y ) { sprite = 201; }
-                else if (foodLocation.X == x && foodLocation.Y == (y + 1 ) % playingField.Y) { sprite = 205; }
+                if (objectAt(x, y)) { sprite = 201; }
+                else if (objectAt(x , (y + 1 ) % playingField.Y)) { sprite = 205; }
                 break;
             case Direction.Left:
                 sprite = 102;
-                if (foodLocation.X == x && foodLocation.Y == y) { sprite = 202; }
-                else if (foodLocation.X ==( x - 1+ playingField.X)% playingField.X && foodLocation.Y == y) { sprite = 206; }
+                if (objectAt(x, y)) { sprite = 202; }
+                else if (objectAt(( x - 1+ playingField.X)% playingField.X , y)) { sprite = 206; }
                 break;
             case Direction.Up:
                 sprite = 103;
-                if (foodLocation.X == x && foodLocation.Y == y) { sprite = 203; }
-                else if (foodLocation.X == x && foodLocation.Y == (y - 1 + playingField.Y) % playingField.Y) { sprite = 207; }
+                if (objectAt(x, y)) { sprite = 203; }
+                else if (objectAt( x ,  (y - 1 + playingField.Y) % playingField.Y)) { sprite = 207; }
                 break;
         }
         return sprite;
+    }
+
+    private bool objectAt(double x, double y)
+    {
+        bool objectFound = (foodLocation.X == x && foodLocation.Y == y);
+        if (!objectFound)
+        {
+            LinkedListNode<GameData.SnakeChunk> currChunk = snake.First.Next.Next.Next;
+            do
+            {
+                if (currChunk.Value.x == x && currChunk.Value.y == y) objectFound=true;
+            } while ((currChunk = currChunk.Next) != null) ;
+        }
+        return objectFound;
+    }
+
+    public bool snakeAlive()
+    {
+        int x = snake.First.Value.x;
+        int y = snake.First.Value.y;
+        isAlive = true;
+        LinkedListNode<GameData.SnakeChunk> currChunk = snake.First.Next.Next.Next;
+        do
+        {
+            if (currChunk.Value.x == x && currChunk.Value.y == y) isAlive = false;
+        } while ((currChunk = currChunk.Next) != null);
+        return isAlive;
     }
 
     private void spawnFood()

@@ -2,6 +2,7 @@
 using SkiaSharp.Views.Forms;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
@@ -20,70 +21,104 @@ namespace Snek
         static int IMAGESIZE=32;
 
         GameData gameData;
-        
+        private bool running;
 
         public MainPage()
         {
             InitializeComponent();
             gameData = new GameData ( 20, 20 );
+            scoreLabel.Text = "Score: 0\n\nSwipe to start";
+            running = false;
+            //directionCanvas.HeightRequest = gameLayout.Height / 8;
+            Device.StartTimer(TimeSpan.FromSeconds(0.4), () =>
+            {
+                Task.Run(async () =>
+                {
+                    if(running)tick();
+                });
+                return true;
+            });
         }
 
-        void OnSwiped(object sender, SwipedEventArgs e)
+        void tick()
         {
-            gameData.setDirection(e.Direction);
             gameData.gameTick();
-            //render();
+            if (!gameData.snakeAlive())
+            {
+                scoreLabel.Text = "Score: " + gameData.score+"\n\nGAME OVER!\n\nSwipe to start";
+                running = false;
+            }
+            else
+            {
+                scoreLabel.Text = "Score: " + gameData.score;
+            }
             playfieldCanvas.InvalidateSurface();
         }
-
-        private void render()
+        void OnSwiped(object sender, SwipedEventArgs e)
         {
-            double[,] field = new double[(int)gameData.playingField.Y,(int)gameData.playingField.X];
-
-            GameData.SnakeChunk[] snake = gameData.snake.ToArray<GameData.SnakeChunk>();
-            
-            foreach(GameData.SnakeChunk chunk in snake)
+            if (running) { 
+            gameData.setDirection(e.Direction);
+            }
+            else
             {
-                field[chunk.y,chunk.x] = chunk.sprite;
+                scoreLabel.Text = "Score: 0";
+                gameData = new GameData(20, 20);
+                running = true;
+            }
+            directionCanvas.InvalidateSurface();
+        }
+
+
+
+        private void directionCanvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
+        {
+            SKSurface surface = e.Surface;
+            SKCanvas canvas = surface.Canvas;
+            if (gameLayout.Height > gameLayout.Width)
+            {
+                directionCanvas.HeightRequest = gameLayout.Width / 8;
+
+            }
+            else
+            {
+                directionCanvas.WidthRequest = gameLayout.Height / 8;
+
+            }
+            canvas.Clear();
+
+
+            using (Stream stream = GetType().GetTypeInfo().Assembly.GetManifestResourceStream("Snek.images." + gameData.getNewDirection() + ".png"))
+            {
+                SKBitmap arrow = SKBitmap.Decode(stream);
                 
-            }
-            
-            
-            String myStr = "";
-            int i = 0;
-            foreach(int spriteID in field)
-            {
 
-                myStr += spriteID / 100;
-                i = (i + 1) % (int)gameData.playingField.X;
-                if (i == 0) myStr += '\n';
+
+                //scale final image
+                var paint = new SKPaint
+                {
+                    FilterQuality = SKFilterQuality.High // high quality scaling
+                };
+                var pictureFrame = SKRect.Create(0, 0, directionCanvas.CanvasSize.Width, directionCanvas.CanvasSize.Height);
+                var imageSize = new SKSize(arrow.Width, arrow.Height);
+                var dest = pictureFrame.AspectFit(imageSize); // fit the size inside the rect
+
+                //draw game into the canvas
+                canvas.DrawBitmap(arrow, dest, paint);
             }
-            labeltje.Text = myStr;
-            //gameGrid.Children.Add()
-            //throw new NotImplementedException();
+        }
+
+
             //SKCanvasView playfieldCanvas = new SKCanvasView();//Moest de IDE de laatste versie van SkiaSharp.Views en SkiaSharp.Views.Forms laten zoeken en installeren
 
             //SKBitmap resourceBitmap; //Moest de IDE de laatste versie van SkiaSharp laten zoeken en installeren
-        }
 
-        private void playfieldCanvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
+
+            private void playfieldCanvas_PaintSurface(object sender, SKPaintSurfaceEventArgs e)
         {
             SKSurface surface = e.Surface;
             SKCanvas canvas = surface.Canvas;
             canvas.Clear();
 
-            double[,] field = new double[(int)gameData.playingField.Y, (int)gameData.playingField.X];
-
-            GameData.SnakeChunk[] snake = gameData.snake.ToArray<GameData.SnakeChunk>();
-
-            foreach (GameData.SnakeChunk chunk in snake)
-            {
-                field[chunk.y, chunk.x] = chunk.sprite;
-
-            }
-
-
-            
 
             SKImage finalImage = null;
 
@@ -92,24 +127,28 @@ namespace Snek
                 var tempCanvas = tempSurface.Canvas;
                 tempCanvas.Clear(SKColors.Black);
 
-                int x = 0;
-                int y = 0;
-                foreach (int spriteID in field)
+                LinkedListNode<GameData.SnakeChunk> currChunk = gameData.snake.Last;
+                do
                 {
-
-                    
-                    string resourceID = "Snek.sprites." + spriteID + ".png";
+                    string resourceID = "Snek.sprites." + currChunk.Value.sprite + ".png";
                     Assembly assembly = GetType().GetTypeInfo().Assembly;
 
                     using (Stream stream = assembly.GetManifestResourceStream(resourceID))
                     {
                         SKBitmap resourceBitmap = SKBitmap.Decode(stream);
-                        tempCanvas.DrawBitmap(resourceBitmap, x * IMAGESIZE - 1, y * IMAGESIZE - 1);
+                        tempCanvas.DrawBitmap(resourceBitmap, currChunk.Value.x * IMAGESIZE - 1, currChunk.Value.y * IMAGESIZE - 1);
                     }
 
-                    x = (x + 1) % (int)gameData.playingField.X;
-                    if (x == 0) y++;
+                } while ((currChunk = currChunk.Previous)!=null);
+
+                //draw food
+                using (Stream stream = GetType().GetTypeInfo().Assembly.GetManifestResourceStream("Snek.sprites.1.png"))
+                {
+                    SKBitmap resourceBitmap = SKBitmap.Decode(stream);
+                    tempCanvas.DrawBitmap(resourceBitmap, gameData.foodLocation.X * IMAGESIZE - 1, gameData.foodLocation.Y * IMAGESIZE - 1);
                 }
+
+
                 finalImage = tempSurface.Snapshot();
 
                 //scale final image
@@ -132,10 +171,12 @@ namespace Snek
                 if (width > height)
                 {
                     gameLayout.Orientation = StackOrientation.Horizontal;
+                    GUIlayout.Orientation = StackOrientation.Vertical;
                 }
                 else
                 {
                     gameLayout.Orientation = StackOrientation.Vertical;
+                    GUIlayout.Orientation = StackOrientation.Horizontal;
                 }
             }
         }

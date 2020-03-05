@@ -14,7 +14,13 @@
             <SwipeGestureRecognizer Direction="Up" Swiped="OnSwiped"/>
             <SwipeGestureRecognizer Direction="Down" Swiped="OnSwiped"/>
         </StackLayout.GestureRecognizers>
-        <Label x:Name="labeltje" Text="hu"></Label>
+        <StackLayout Orientation="Horizontal"  x:Name="GUIlayout">
+            <skia1:SKCanvasView x:Name="directionCanvas"
+                           PaintSurface="directionCanvas_PaintSurface" />
+
+            <Label x:Name="scoreLabel" Text="Score: 0" FontSize="Large"></Label>
+        </StackLayout>
+
         <skia1:SKCanvasView x:Name="playfieldCanvas"
                            PaintSurface="playfieldCanvas_PaintSurface"
                             HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" />
