@@ -6,7 +6,7 @@
              xmlns:skia1="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              mc:Ignorable="d"
              x:Class="Snek.MainPage">
-
+ 
     <StackLayout x:Name="gameLayout" >
         <StackLayout.GestureRecognizers>
             <SwipeGestureRecognizer Direction="Left" Swiped="OnSwiped"/>
@@ -15,7 +15,7 @@
             <SwipeGestureRecognizer Direction="Down" Swiped="OnSwiped"/>
         </StackLayout.GestureRecognizers>
         <StackLayout Orientation="Horizontal"  x:Name="GUIlayout">
-            <skia1:SKCanvasView x:Name="directionCanvas"
+            <skia1:SKCanvasView x:Name="directionCanvas" 
                            PaintSurface="directionCanvas_PaintSurface" />
 
             <Label x:Name="scoreLabel" Text="Score: 0" FontSize="Large"></Label>
